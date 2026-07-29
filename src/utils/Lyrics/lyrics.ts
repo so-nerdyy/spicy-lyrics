@@ -217,7 +217,10 @@ const LyricsInterval = () => {
     }
   } */
 
-  if ($lyricsContainerExists.get()) {
+  // There is no user-visible animation while the Spotify window is hidden.
+  // Avoiding DOM/status work here substantially reduces background CPU use and
+  // lets the next visible frame catch up using the current player position.
+  if ($lyricsContainerExists.get() && !document.hidden) {
     const progress = SpotifyPlayer.GetPosition();
     Lyrics.TimeSetter(progress);
     Lyrics.Animate(progress);
