@@ -25,6 +25,7 @@ import { ApplyIsByCommunity } from "../Credits/ApplyIsByCommunity.tsx";
 import { ApplyLyricsCredits } from "../Credits/ApplyLyricsCredits.ts";
 import { EmitApply, EmitNotApplyed } from "../OnApply.ts";
 import { ApplyLyricsProvider } from "../Credits/ApplyProvider.ts";
+import { filterLyricText } from "../../ContentFilter.ts";
 
 // Define the data structure for lyrics
 interface LyricsLineData {
@@ -176,8 +177,9 @@ export function ApplyLineLyrics(data: LyricsData, UseRomanized: boolean = false)
 
   data.Content.forEach((line, index, arr) => {
     const lineElem = document.createElement("div");
-    lineElem.textContent =
-      UseRomanized && line.TransliteratedText !== undefined ? line.TransliteratedText : line.Text;
+    lineElem.textContent = filterLyricText(
+      UseRomanized && line.TransliteratedText !== undefined ? line.TransliteratedText : line.Text
+    );
     lineElem.classList.add("line");
 
     if (isRtl(line.Text) && !lineElem.classList.contains("rtl")) {

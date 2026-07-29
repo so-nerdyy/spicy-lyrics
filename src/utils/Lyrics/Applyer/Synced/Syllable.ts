@@ -28,6 +28,7 @@ import { EmitApply, EmitNotApplyed } from "../OnApply.ts";
 import Emphasize from "../Utils/Emphasize.ts";
 import { IsLetterCapable } from "../Utils/IsLetterCapable.ts";
 import { ApplyLyricsProvider } from "../Credits/ApplyProvider.ts";
+import { filterLyricText } from "../../ContentFilter.ts";
 
 // Define the data structure for syllable lyrics
 interface SyllableData {
@@ -64,6 +65,12 @@ interface LyricsData {
   source?: "spt" | "spl" | "aml";
   classes?: string;
   styles?: Record<string, string>;
+}
+
+function displayText(item: { Text: string; TransliteratedText?: string }, useRomanized: boolean): string {
+  return filterLyricText(
+    useRomanized && item.TransliteratedText !== undefined ? item.TransliteratedText : item.Text
+  );
 }
 
 export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = false): void {
@@ -239,17 +246,14 @@ export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = fa
 
       const totalDuration = ConvertTime(lead.EndTime) - ConvertTime(lead.StartTime);
 
-      const letterLength = (
-        UseRomanized && lead.TransliteratedText !== undefined ? lead.TransliteratedText : lead.Text
-      ).split("").length;
+      const renderedText = displayText(lead, UseRomanized);
+      const letterLength = renderedText.split("").length;
 
-      const IfLetterCapable = IsLetterCapable(letterLength, totalDuration) && !isRtl(UseRomanized && lead.TransliteratedText !== undefined ? lead.TransliteratedText : lead.Text);
+      const IfLetterCapable = IsLetterCapable(letterLength, totalDuration) && !isRtl(renderedText);
 
       if (IfLetterCapable) {
         word = document.createElement("div");
-        const letters = (
-          UseRomanized && lead.TransliteratedText !== undefined ? lead.TransliteratedText : lead.Text
-        ).split(""); // Split word into individual letters
+        const letters = renderedText.split(""); // Split word into individual letters
 
         Emphasize(letters, word, lead);
 
@@ -266,8 +270,7 @@ export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = fa
           word.style.transform = `translateY(calc(var(--DefaultLyricsSize) * 0.02))`;
         }
       } else {
-        word.textContent =
-          UseRomanized && lead.TransliteratedText !== undefined ? lead.TransliteratedText : lead.Text;
+        word.textContent = renderedText;
 
         if (!$simpleLyricsMode.get()) {
           word.style.setProperty("--gradient-position", `-20%`);
@@ -348,17 +351,14 @@ export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = fa
 
           const totalDuration = ConvertTime(bw.EndTime) - ConvertTime(bw.StartTime);
 
-          const letterLength = (
-            UseRomanized && bw.TransliteratedText !== undefined ? bw.TransliteratedText : bw.Text
-          ).split("").length;
+          const renderedText = displayText(bw, UseRomanized);
+          const letterLength = renderedText.split("").length;
 
-          const IfLetterCapable = IsLetterCapable(letterLength, totalDuration) && !isRtl(UseRomanized && bw.TransliteratedText !== undefined ? bw.TransliteratedText : bw.Text);
+          const IfLetterCapable = IsLetterCapable(letterLength, totalDuration) && !isRtl(renderedText);
 
           if (IfLetterCapable) {
             bwE = document.createElement("div");
-            const letters = (
-              UseRomanized && bw.TransliteratedText !== undefined ? bw.TransliteratedText : bw.Text
-            ).split(""); // Split word into individual letters
+            const letters = renderedText.split(""); // Split word into individual letters
 
             Emphasize(letters, bwE, bw, true);
 
@@ -375,8 +375,7 @@ export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = fa
               bwE.style.transform = `translateY(calc(var(--font-size) * 0.02))`;
             }
           } else {
-            bwE.textContent =
-              UseRomanized && bw.TransliteratedText !== undefined ? bw.TransliteratedText : bw.Text;
+            bwE.textContent = renderedText;
 
             if (!$simpleLyricsMode.get()) {
               bwE.style.setProperty("--gradient-position", `0%`);
