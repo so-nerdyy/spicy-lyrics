@@ -21,6 +21,7 @@ import { ApplyIsByCommunity } from "./Credits/ApplyIsByCommunity.tsx";
 import { ApplyLyricsCredits } from "./Credits/ApplyLyricsCredits.ts";
 import { EmitApply, EmitNotApplyed } from "./OnApply.ts";
 import { ApplyLyricsProvider } from "./Credits/ApplyProvider.ts";
+import { filterLyricText } from "../ContentFilter.ts";
 
 /**
  * Interface for static lyrics data
@@ -78,8 +79,9 @@ export function ApplyStaticLyrics(data: StaticLyricsData, UseRomanized: boolean 
   data.Lines.forEach((line) => {
     const lineElem = document.createElement("div");
 
-    lineElem.textContent =
-      UseRomanized && line.TransliteratedText !== undefined ? line.TransliteratedText : line.Text;
+    lineElem.textContent = filterLyricText(
+      UseRomanized && line.TransliteratedText !== undefined ? line.TransliteratedText : line.Text
+    );
 
     if (isRtl(line.Text) && !lineElem.classList.contains("rtl")) {
       lineElem.classList.add("rtl");
