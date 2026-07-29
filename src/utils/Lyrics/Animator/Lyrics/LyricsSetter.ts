@@ -8,6 +8,12 @@ type ExtendedLyricsType = LyricsType | "None";
 // Define a type for the word/syllable status
 type ElementStatus = "NotSung" | "Active" | "Sung";
 
+// Status is consumed by scrolling, not by the per-frame animator (which derives
+// state directly from timestamps). Updating it at 60 FPS needlessly walks every
+// lyric line and every letter; 75 ms is still well below perceptible scroll lag.
+const STATUS_UPDATE_INTERVAL_MS = 75;
+let lastStatusPosition = Number.NaN;
+
 // Define interfaces for the objects we're working with
 interface _SyllableLead {
   HTMLElement: HTMLElement;
@@ -28,6 +34,14 @@ function getElementStatus(
 }
 
 export function TimeSetter(PreCurrentPosition: number): void {
+  if (
+    Number.isFinite(lastStatusPosition) &&
+    Math.abs(PreCurrentPosition - lastStatusPosition) < STATUS_UPDATE_INTERVAL_MS
+  ) {
+    return;
+  }
+  lastStatusPosition = PreCurrentPosition;
+
   const CurrentPosition = PreCurrentPosition + timeOffset;
   const CurrentLyricsType = $currentLyricsType.get() as ExtendedLyricsType;
 
