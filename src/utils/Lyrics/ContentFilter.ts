@@ -21,6 +21,10 @@ const BLOCKED_PATTERN = new RegExp(
   "giu"
 );
 
+// Included in the compiled extension so a local install can be verified with
+// `Select-String` before Spotify is restarted.
+export const CONTENT_FILTER_BUILD_MARKER = "spicy-lyrics-content-filter-v2";
+
 const filteredTexts = new Map<string, string>();
 const filteredPayloads = new WeakSet<object>();
 
@@ -49,6 +53,45 @@ function filterEntry(entry: unknown): void {
   }
 }
 
+type SyllableEntry = {
+  Text?: unknown;
+  TransliteratedText?: unknown;
+  IsPartOfWord?: unknown;
+};
+
+function filterSyllables(syllables: unknown[] | undefined): void {
+  if (!syllables) return;
+
+  for (let index = 0; index < syllables.length; index += 1) {
+    const entries: SyllableEntry[] = [];
+    let current = syllables[index] as SyllableEntry | undefined;
+    if (!current || typeof current !== "object") continue;
+    entries.push(current);
+
+    // `IsPartOfWord` means this syllable joins directly to the next one. Treat
+    // the complete reconstructed word as one unit, then split the equally sized
+    // mask back over the original entries to preserve karaoke timing.
+    while (current.IsPartOfWord && index + 1 < syllables.length) {
+      index += 1;
+      current = syllables[index] as SyllableEntry | undefined;
+      if (!current || typeof current !== "object") break;
+      entries.push(current);
+    }
+
+    for (const key of ["Text", "TransliteratedText"] as const) {
+      if (!entries.every((entry) => typeof entry[key] === "string")) continue;
+      const joined = entries.map((entry) => entry[key] as string).join("");
+      const filtered = Array.from(filterLyricText(joined));
+      let offset = 0;
+      for (const entry of entries) {
+        const length = Array.from(entry[key] as string).length;
+        entry[key] = filtered.slice(offset, offset + length).join("");
+        offset += length;
+      }
+    }
+  }
+}
+
 /**
  * Filters each lyric payload once, before any of the renderers create DOM nodes.
  * This protects static, line-synced, syllable-synced, background, and romanized
@@ -70,7 +113,7 @@ export function filterLyricsPayload(payload: unknown): void {
   lyrics.Lines?.forEach(filterEntry);
   lyrics.Content?.forEach((line) => {
     filterEntry(line);
-    line.Lead?.Syllables?.forEach(filterEntry);
-    line.Background?.forEach((background) => background.Syllables?.forEach(filterEntry));
+    filterSyllables(line.Lead?.Syllables);
+    line.Background?.forEach((background) => filterSyllables(background.Syllables));
   });
 }
