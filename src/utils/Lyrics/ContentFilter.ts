@@ -17,7 +17,7 @@ const BLOCKED_WORDS = [
 const BLOCKED_PATTERN = new RegExp(
   String.raw`(?<![\p{L}\p{N}])(?:${BLOCKED_WORDS.map((word) =>
     word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-  ).join("|")}|masturbat(?:e|es|ed|ing|ion)?|f+(?:[u*]+c+\**k+|\*{3,}(?:ing|er|ed|s)?)|sh+[i1!]+t+|b+[i1!]+t+c+h+|d+[i1!]+c+k+|c+[o0]+c+k+|s+[e3]+x+|p+[u*]+ss+y+|n+[i1!]+gg+[ae3]+r?)(?![\p{L}\p{N}])`,
+  ).join("|")}|masturbat(?:e|es|ed|ing|ion)?|f+(?:[u*]+c+\**k+|\*{3,})(?:in(?:g)?|er|ed|s)?|sh+[i1!]+t+(?:s|ty)?|b+[i1!]+t+c+h+(?:es|y)?|d+[i1!]+c+k+s?|c+[o0]+c+k+s?|s+[e3]+x+(?:ual|y|t(?:ing)?)?|p+[u*]+ss+(?:y|ies)?|n+[i1!]+gg+[ae34]+r?(?:s|z)?)(?![\p{L}\p{N}])`,
   "giu"
 );
 
