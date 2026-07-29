@@ -15,6 +15,7 @@ import { CleanUpIsByCommunity } from "../Applyer/Credits/ApplyIsByCommunity.tsx"
 import { IsCompactMode } from "../../../components/Utils/CompactMode.ts";
 import Fullscreen from "../../../components/Utils/Fullscreen.ts";
 import { SpotifyPlayer } from "../../../components/Global/SpotifyPlayer.ts";
+import { filterLyricsPayload } from "../ContentFilter.ts";
 
 /**
  * Union type for all lyrics data types
@@ -158,6 +159,7 @@ export default async function ApplyLyrics(lyricsContent: [object | string, numbe
   }
 
   const lyrics = descriptor as LyricsData;
+  filterLyricsPayload(lyrics);
 
   const romanize = isRomanized;
 
