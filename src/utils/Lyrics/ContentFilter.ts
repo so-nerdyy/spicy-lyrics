@@ -117,3 +117,41 @@ export function filterLyricsPayload(payload: unknown): void {
     line.Background?.forEach((background) => filterSyllables(background.Syllables));
   });
 }
+
+function filterTextNode(node: Text): void {
+  const filtered = filterLyricText(node.data);
+  if (filtered !== node.data) node.data = filtered;
+}
+
+function filterTextSubtree(root: Node): void {
+  if (root.nodeType === Node.TEXT_NODE) {
+    filterTextNode(root as Text);
+    return;
+  }
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node: Node | null;
+  while ((node = walker.nextNode())) filterTextNode(node as Text);
+}
+
+/**
+ * Last-line safety net for every lyric DOM update. Provider responses and all
+ * known renderers are filtered earlier, but this observer guarantees that text
+ * injected by any future renderer or delayed update is masked before it remains
+ * visible inside the Spicy Lyrics scroll container.
+ */
+export function guardLyricsContainer(container: HTMLElement): () => void {
+  filterTextSubtree(container);
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      if (record.type === "characterData") {
+        filterTextNode(record.target as Text);
+      } else {
+        record.addedNodes.forEach(filterTextSubtree);
+      }
+    }
+  });
+
+  observer.observe(container, { childList: true, characterData: true, subtree: true });
+  return () => observer.disconnect();
+}

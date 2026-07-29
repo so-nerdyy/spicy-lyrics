@@ -1,10 +1,12 @@
 import { QueueForceScroll } from "../../Scrolling/ScrollToActiveLine.ts";
 import { ScrollSimplebar } from "../../Scrolling/Simplebar/ScrollSimplebar.ts";
 import { destroyLyricsVirtualizer } from "../LyricsVirtualizer.ts";
+import { guardLyricsContainer } from "../ContentFilter.ts";
 
 type LyricsContainerReturnObject = {
   Container: HTMLElement;
   ResizeListener: ResizeObserver;
+  ContentGuardCleanup: () => void;
   Append: (AppendTo: HTMLElement) => void;
   Remove: () => void;
   Resize: () => void;
@@ -31,10 +33,12 @@ const CreateLyricsContainer = (): LyricsContainerReturnObject => {
   const ResizeListener = new ResizeObserver(() => {
     Resize();
   });
+  const ContentGuardCleanup = guardLyricsContainer(Container);
 
   const Remove = () => {
     ResizeListener.unobserve(Container.parentElement as HTMLElement);
     ResizeListener.disconnect();
+    ContentGuardCleanup();
     Container.remove();
     LyricsContainerInstances.delete(currentIndex);
   };
@@ -42,6 +46,7 @@ const CreateLyricsContainer = (): LyricsContainerReturnObject => {
   const ReturnObject = {
     Container,
     ResizeListener,
+    ContentGuardCleanup,
     Append: (AppendTo: HTMLElement) => {
       AppendTo.appendChild(Container);
       ResizeListener.observe(Container.parentElement as HTMLElement);
